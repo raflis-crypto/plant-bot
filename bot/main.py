@@ -1,7 +1,7 @@
 import asyncio
 import os
 from aiogram import Bot, Dispatcher
-from bot.handlers import identify, info, recipe
+from handlers import identify, info, recipe
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 
