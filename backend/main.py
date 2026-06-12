@@ -30,6 +30,23 @@ async def healthz():
     }
 
 
+@app.get("/test-groq")
+async def test_groq():
+    import os
+    from groq import AsyncGroq
+    api_key = os.environ.get("GROQ_API_KEY", "NOT SET")
+    try:
+        client = AsyncGroq(api_key=api_key)
+        r = await client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[{"role": "user", "content": "Say OK"}],
+            max_tokens=5,
+        )
+        return {"ok": True, "reply": r.choices[0].message.content, "key_prefix": api_key[:8]}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "key_prefix": api_key[:8]}
+
+
 @app.get("/test-plantnet")
 async def test_plantnet():
     import os, httpx
