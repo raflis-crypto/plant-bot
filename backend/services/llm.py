@@ -1,7 +1,7 @@
 import os
 from groq import AsyncGroq
 
-MODEL = "llama3-70b-8192"
+MODEL = "llama-3.3-70b-versatile"
 
 
 def _client() -> AsyncGroq:
