@@ -1,5 +1,8 @@
 import os
+import logging
 import httpx
+
+logger = logging.getLogger(__name__)
 
 PLANTNET_URL = "https://my-api.plantnet.org/v2/identify/all"
 SCORE_THRESHOLD = 0.35
@@ -11,15 +14,15 @@ async def identify(image_bytes: bytes, filename: str = "photo.jpg") -> dict:
         "api-key": api_key,
         "include-related-images": "false",
     }
-    # organs передаётся как поле multipart-формы, не query-параметр
-    files = [
-        ("images", (filename, image_bytes, "image/jpeg")),
-        ("organs", (None, "auto")),
-    ]
+    files = {"images": (filename, image_bytes, "image/jpeg")}
+    data = {"organs": "auto"}
 
+    logger.info("Calling PlantNet, image size=%d bytes", len(image_bytes))
     async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.post(PLANTNET_URL, params=params, files=files)
+        response = await client.post(PLANTNET_URL, params=params, files=files, data=data)
+        logger.info("PlantNet response: %d", response.status_code)
         if not response.is_success:
+            logger.error("PlantNet error body: %s", response.text[:500])
             raise RuntimeError(f"PlantNet {response.status_code}: {response.text[:300]}")
 
 

@@ -1,8 +1,11 @@
+import logging
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from services import plantnet, llm
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="Plant Bot Backend")
 
