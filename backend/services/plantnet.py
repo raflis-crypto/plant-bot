@@ -7,12 +7,18 @@ SCORE_THRESHOLD = 0.35
 
 async def identify(image_bytes: bytes, filename: str = "photo.jpg") -> dict:
     api_key = os.environ["PLANTNET_API_KEY"]
-    params = {"api-key": api_key, "include-related-images": "false"}
+    params = {
+        "api-key": api_key,
+        "include-related-images": "false",
+        "organs": "auto",
+    }
     files = {"images": (filename, image_bytes, "image/jpeg")}
 
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.post(PLANTNET_URL, params=params, files=files)
-        response.raise_for_status()
+        if not response.is_success:
+            raise RuntimeError(f"PlantNet {response.status_code}: {response.text[:300]}")
+
 
     data = response.json()
     results = data.get("results", [])
