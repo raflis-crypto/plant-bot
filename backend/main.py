@@ -26,40 +26,8 @@ async def healthz():
     return {
         "plantnet_key_set": bool(os.environ.get("PLANTNET_API_KEY")),
         "groq_key_set": bool(os.environ.get("GROQ_API_KEY")),
-        "plantnet_key_prefix": os.environ.get("PLANTNET_API_KEY", "")[:8],
     }
 
-
-@app.get("/test-groq")
-async def test_groq():
-    import os
-    from groq import AsyncGroq
-    api_key = os.environ.get("GROQ_API_KEY", "NOT SET")
-    try:
-        client = AsyncGroq(api_key=api_key)
-        r = await client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=[{"role": "user", "content": "Say OK"}],
-            max_tokens=5,
-        )
-        return {"ok": True, "reply": r.choices[0].message.content, "key_prefix": api_key[:8]}
-    except Exception as e:
-        return {"ok": False, "error": str(e), "key_prefix": api_key[:8]}
-
-
-@app.get("/test-plantnet")
-async def test_plantnet():
-    import os, httpx
-    api_key = os.environ.get("PLANTNET_API_KEY", "NOT SET")
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(
-                "https://my-api.plantnet.org/v2/identify/all",
-                params={"api-key": api_key}
-            )
-        return {"status": r.status_code, "body": r.text[:300], "key_prefix": api_key[:8]}
-    except Exception as e:
-        return {"error": str(e), "key_prefix": api_key[:8]}
 
 
 @app.post("/identify")
