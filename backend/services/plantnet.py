@@ -10,9 +10,12 @@ async def identify(image_bytes: bytes, filename: str = "photo.jpg") -> dict:
     params = {
         "api-key": api_key,
         "include-related-images": "false",
-        "organs": "auto",
     }
-    files = {"images": (filename, image_bytes, "image/jpeg")}
+    # organs передаётся как поле multipart-формы, не query-параметр
+    files = [
+        ("images", (filename, image_bytes, "image/jpeg")),
+        ("organs", (None, "auto")),
+    ]
 
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.post(PLANTNET_URL, params=params, files=files)
