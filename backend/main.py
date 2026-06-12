@@ -19,10 +19,13 @@ class RecipeRequest(BaseModel):
 @app.post("/identify")
 async def identify(file: UploadFile = File(...)):
     image_bytes = await file.read()
+    print(f"[identify] received {len(image_bytes)} bytes, filename={file.filename}", flush=True)
     try:
         result = await plantnet.identify(image_bytes, filename=file.filename or "photo.jpg")
+        print(f"[identify] result={result}", flush=True)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"PlantNet error: {e}")
+        print(f"[identify] ERROR: {e}", flush=True)
+        raise HTTPException(status_code=502, detail=str(e))
     return result
 
 
