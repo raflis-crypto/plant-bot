@@ -3,6 +3,7 @@ import aiohttp
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
+from handlers.identify import user_plants
 
 router = Router()
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
@@ -10,18 +11,22 @@ BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 
 @router.message(Command("recipe"))
 async def handle_recipe(message: Message):
-    # Ожидаемый формат: /recipe <растение> | <состояние>
+    # Формат: /recipe <болезнь>
     parts = message.text.split(maxsplit=1)
-    if len(parts) < 2 or "|" not in parts[1]:
+    if len(parts) < 2 or not parts[1].strip():
         await message.answer(
-            "Использование: /recipe <название растения> | <состояние>\n"
-            "Например: /recipe Ромашка | простуда"
+            "Использование: /recipe <болезнь>\n"
+            "Например: /recipe простуда\n\n"
+            "Сначала пришли фото растения — я запомню его для рецепта."
         )
         return
 
-    plant_part, condition_part = parts[1].split("|", 1)
-    name = plant_part.strip()
-    condition = condition_part.strip()
+    condition = parts[1].strip()
+    name = user_plants.get(message.from_user.id)
+
+    if not name:
+        await message.answer("Сначала пришли фото растения.")
+        return
 
     await message.answer("⏳ Составляю рецепт...")
 

@@ -6,6 +6,9 @@ from aiogram.types import Message, PhotoSize
 router = Router()
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 
+# user_id -> последнее определённое название растения
+user_plants: dict[int, str] = {}
+
 
 @router.message(lambda m: m.photo is not None)
 async def handle_photo(message: Message):
@@ -34,12 +37,25 @@ async def handle_photo(message: Message):
         )
         return
 
+    name = result["name"]
     score_pct = int(result["score"] * 100)
+
+    # Сохраняем растение для этого пользователя
+    user_plants[message.from_user.id] = name
+
+    # Запрашиваем описание сразу
+    async with aiohttp.ClientSession() as session:
+        async with session.post(f"{BACKEND_URL}/info", json={"name": name}) as resp:
+            if resp.status == 200:
+                info_data = await resp.json()
+                info_text = info_data["text"]
+            else:
+                info_text = "⚠️ Не удалось загрузить описание.\n\n⚠️ Информация носит справочный характер. Перед применением проконсультируйтесь со специалистом."
+
     await message.answer(
-        f"🌱 <b>{result['name']}</b>\n"
-        f"<i>{result['sci']}</i>\n"
-        f"Уверенность: {score_pct}%\n\n"
-        f"Отправьте /info {result['name']} — чтобы узнать подробнее\n"
-        f"Отправьте /recipe {result['name']} — чтобы получить рецепт",
+        f"🌱 <b>{name}</b>\n"
+        f"<i>{result['sci']}</i> · Уверенность: {score_pct}%\n\n"
+        f"{info_text}\n\n"
+        f"💊 Чтобы получить рецепт, отправьте:\n<code>/recipe ваша болезнь</code>",
         parse_mode="HTML",
     )
